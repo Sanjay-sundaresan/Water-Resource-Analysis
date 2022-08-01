@@ -67,8 +67,16 @@ summary(reservoir_levels[2:5])
 summary(rainfall[2:5])
 ```
 Since the statistical summary is performed on daily reservoir levels and rainfall, there are multiple 0 values. The statistical summary leads to the hypothesis that the Cholavaram reservoir has had the least mean level over the 15 year period considered in the data. Hence, either the region does not receive as much rainfall as the others, or there is a problem with the natural capacity of the reservoir. In either case, the contribution of the Cholavaram reservoir is the lowest. The other, more obvious hypothesis is that distribution of the water levels and rainfall in the reservoir regions has not been uniform over the 15 years, with some dates having high rainfall and water levels in specific regions, while other regions may have received considerably lower quanta. 
+```{r}
+boxplot(reservoir_levels$POONDI, main = "Poondi Daily Reservoir Levels")
+boxplot(reservoir_levels$CHEMBARAMBAKKAM, main = "Chembarambakkam Daily Reservoir Levels")
+boxplot(reservoir_levels$REDHILLS, main = "Red Hills Daily Reservoir Levels")
+boxplot(reservoir_levels$CHOLAVARAM, main = "Cholavaram Daily Reservoir Levels")
+```
 
-As the initial hypotheses have been formed, and the data has been cleaned and pre-processed, It is now the appropriate juncture to perform exploratory descriptive and diagnostic analysis. 
+The high IQR ensures that there are no outliers in the data for all the reservoirs. This is mostly consistent with the nature of the water bodies themselves, as negative water levels or excessively high water levels do not occur naturally, unless there is an error during the data collection process. Based upon the observed IQR and outlier ranges, this can be safely ruled out. 
+
+As the initial hypotheses have been formed, and the data has been cleaned and pre-processed, It is now the appropriate juncture to perform exploratory, descriptive and diagnostic analysis. 
 
 ## Part 2: Exploratory descriptve and diagnostic analysis
 ```{r}
@@ -99,15 +107,49 @@ library(gridExtra)
 grid.arrange(p5,p6,p7,p8,ncol = 2, top = "Reservoir levels and Rainfall over time")
 
 ```
-The line plots clearly indicate that there seems to be some sort of interplay between the rainfall and reservoir levels, which validates the logical assumption made during the formulation of the hypothesis. The line plots also indicate that the rainfall at Cholavaram has been on the lower side throughout the 15 years, in comparison to the other 3 reservoirs, which also validates the hypothesis that it contributes the least amount due to this reason.
+Scatter Plot of Daily Reservoir levels vs Rainfall
+
+```{r}
+plot(reservoir_levels$POONDI,rainfall$POONDI, ylim = c(0,500), col="blue", main = "Daily Reservoir Level vs Rainfall Poondi", xlab = "Reservoir Level (tmcft)", ylab = "Rainfall (mm)")
+plot(reservoir_levels$CHOLAVARAM,rainfall$CHOLAVARAM, ylim = c(0,500), col="red", main = "Daily Reservoir Level vs Rainfall Cholavaram", xlab = "Reservoir Level (tmcft)", ylab = "Rainfall (mm)")
+plot(reservoir_levels$REDHILLS,rainfall$REDHILLS, ylim = c(0,500), col="green", main = "Daily Reservoir Level vs Rainfall Red Hills", xlab = "Reservoir Level (tmcft)", ylab = "Rainfall (mm)")
+plot(reservoir_levels$CHEMBARAMBAKKAM,rainfall$CHEMBARAMBAKKAM, ylim = c(0,500), col="black", main = "Daily Reservoir Level vs Rainfall Chembarambakkam", xlab = "Reservoir Level (tmcft)", ylab = "Rainfall (mm)")
+```
+
+The plots clearly indicate that there seems to be some sort of interplay between the rainfall and reservoir levels, which validates the logical assumption made during the formulation of the hypothesis. The line plots also indicate that the rainfall at Cholavaram has been on the lower side throughout the 15 years, in comparison to the other 3 reservoirs, which also validates the hypothesis that it contributes the least amount due to this reason.
 
 Another interesting point of significance is the extreme low that the reservoir levels have experienced in 2014-15, and also in 2018-19, which was more apparent in all 4 reservoirs. Although there is no concrete repetition in the reservoir levels and rainfall patterns, some years look similar across both parameters, hence warranting a look at the aggregate reservoir levels and rainfall levels across all 4 regions over the years. 
 
+Accumulated Yearly Reservoir Levels Over time
+```{r}
+ggplot(reservoir_levels, aes(x=format(as.Date(reservoir_levels$Date, format="%d-%m-%Y"),"%Y"), y=POONDI)) + geom_bar(stat = "identity") + xlab("Year") + ylab("Reservoir Level (tmcft)") + ggtitle("Poondi Reservoir Accumulated Yearly Levels") 
+
+ggplot(reservoir_levels, aes(x=format(as.Date(reservoir_levels$Date, format="%d-%m-%Y"),"%Y"), y=CHOLAVARAM)) + geom_bar(stat = "identity") + xlab("Year") + ylab("Reservoir Level (tmcft)") + ggtitle("Cholavaram Reservoir Accumulated Yearly Levels")
+
+ggplot(reservoir_levels, aes(x=format(as.Date(reservoir_levels$Date, format="%d-%m-%Y"),"%Y"), y=REDHILLS)) + geom_bar(stat = "identity") + xlab("Year") + ylab("Reservoir Level (tmcft)") + ggtitle("RedHills Reservoir Accumulated Yearly Levels")
+
+ggplot(reservoir_levels, aes(x=format(as.Date(reservoir_levels$Date, format="%d-%m-%Y"),"%Y"), y=CHEMBARAMBAKKAM)) + geom_bar(stat = "identity") + xlab("Year") + ylab("Reservoir Level (tmcft)") + ggtitle("Chembarambakkam Reservoir Accumulated Yearly Levels")
+```
+
+Daily Rainfall over time
+```{r}
+ggplot(rainfall, aes(x=format(as.Date(reservoir_levels$Date, format="%d-%m-%Y"),"%Y"), y=POONDI)) + geom_bar(stat = "identity") + xlab("Year") + ylab("Rainfall Level (mm)") + ggtitle("Poondi Reservoir Accumulated Yearly Rainfall")
+
+ggplot(rainfall, aes(x=format(as.Date(reservoir_levels$Date, format="%d-%m-%Y"),"%Y"), y=CHOLAVARAM)) + geom_bar(stat = "identity") + xlab("Year") + ylab("Rainfall Level (mm)") + ggtitle("Cholavaram Reservoir Accumulated Yearly Rainfall")
+
+ggplot(rainfall, aes(x=format(as.Date(reservoir_levels$Date, format="%d-%m-%Y"),"%Y"), y=REDHILLS)) + geom_bar(stat = "identity") + xlab("Year") + ylab("Rainfall Level (mm)") + ggtitle("RedHills Reservoir Accumulated Yearly Rainfall")
+
+ggplot(rainfall, aes(x=format(as.Date(reservoir_levels$Date, format="%d-%m-%Y"),"%Y"), y=CHEMBARAMBAKKAM)) + geom_bar(stat = "identity") + xlab("Year") + ylab("Rainfall Level (mm)") + ggtitle("Chembarambakkam Reservoir Accumulated Yearly Rainfall")
+```
+
+
+Consolidated yearly rainfall
 ```{r}
 library(dplyr)
 df = rainfall
 df$Day_Sum = df$POONDI + df$CHOLAVARAM + df$REDHILLS + df$CHEMBARAMBAKKAM
 df$Year = format(rainfall$Date, format = "%Y")
+
 Aggregate_Rainfall = df %>% 
     group_by(Year) %>% 
     summarize(Agg = sum(Day_Sum))
@@ -169,11 +211,13 @@ ggplot(df2, aes(x = Date, y = Day_Totals)) +
 ```
 The dry season is represented in Red, Wet season in blue and the transitional season in green. It is apparent that the dry season sees a sharp drop, and the wet season usually sees an increase, sandwiched by the transition season. But, there are some significant anomalies, where the levels continue to drop event during the transition season (2008, 2009 and 2016). The monsoon season in 2018 made very little difference in the water levels, following a general downward trend where the levels rise less sharply with the onset of the wet season, but comparatively more sharply in the transitional seasons. In fact, these two increases seem to be influencing one another. 
 
+Diagnostic Analysis: 
+
 Upon making some basic, yet important inferences, there is enough information to proceed with the more detailed questions that need to be answered. 
 
 1. Which reservoir tends to contribute the most to the water supply?
 
-Ans: In order to gain the insight required to answer the question, the total  contribution from every reservoir needs to be compared. Pie charts are the best way to achieve this.
+Ans: In order to gain the insight required to answer the question, the total contribution from every reservoir needs to be compared. Pie charts are the best way to achieve this.
 ```{r}
 library(plyr)
 dfres = reservoir_levels
@@ -184,7 +228,7 @@ library(RColorBrewer)
 color <- brewer.pal(4, "Set2") 
 x = c(sum(dfr$p),sum(dfr$c),sum(dfr$r),sum(dfr$ch))
 pct = round(x/sum(x) * 100, digits = 2)
-pie(x, labels = paste0(c("Poondi - ","Chembarambakkam - ","Red Hills - ","Cholavaram - "),pct,"%"), col = color, lty = 3)
+pie(x, labels = paste0(c("Poondi - ","Chembarambakkam - ","Red Hills - ","Cholavaram - "),pct,"%"), col = color, lty = 3, main = "Contribution of Reservoirs to city water supply")
 
 ```
 So, it is very clear that historically, the Red Hills and Chembarambakkam reservoirs have been the most dominant, with Poondi not far behind. The Cholavaram reservoir, however, has contributed a very low amount in comparison (almost 1/6th of Red Hills). 
@@ -227,6 +271,7 @@ It can be inferred that although all the reservoirs are at their lowest during t
 Ans: The water retention capability, in simple terms, can be estimated by comparing the average reservoir water level for the year with the rainfall received that year.For this, we calculate the ratio of the mean reservoir level for the year to the total rainfall received that year, and compare this ratio for all 4 reservoirs.
 ```{r}
 library(dplyr)
+detach(package:plyr)
 comp = reservoir_levels
 comp1 = rainfall
 comp$Year = format(comp$Date, format = "%Y")
@@ -256,24 +301,24 @@ comp$CH_Rf = comprf3$CH_Rf
 comp 
 
 plot(x = comp$Pavg_Res, y = comp$P_Rf, 
-     xlab = "Mean Reservoir Levels",
-     ylab = "Average Rainfall",
+     xlab = "Mean Reservoir Levels(tmcft)",
+     ylab = "Average Rainfall(mm)",
      main = "Mean Reservoir levels vs Average Rainfall - POONDI")
 
 plot(x = comp$Cavg_Res, y = comp$C_Rf, 
-     xlab = "Mean Reservoir Levels",
-     ylab = "Average Rainfall",
+     xlab = "Mean Reservoir Levels(tmcft)",
+     ylab = "Average Rainfall(mm)",
      main = "Mean Reservoir levels vs Average Rainfall - CHEMBARAMBAKKAM")
 
 plot(x = comp$Ravg_Res, y = comp$R_Rf, 
-     xlab = "Mean Reservoir Levels",
-     ylab = "Average Rainfall",
+     xlab = "Mean Reservoir Levels (tmcft)",
+     ylab = "Average Rainfall(mm)",
      main = "Mean Reservoir levels vs Average Rainfall - REDHILLS")
 
 
 plot(x = comp$CHavg_Res, y = comp$CH_Rf, 
-     xlab = "Mean Reservoir Levels",
-     ylab = "Average Rainfall",
+     xlab = "Mean Reservoir Levels(tmcft)",
+     ylab = "Average Rainfall(mm)",
      main = "Mean Reservoir levels vs Average Rainfall - CHOLAVARAM")
 
 ```
@@ -349,8 +394,99 @@ So, when the dry season percentage change in reservoir levels is greater than 5 
 * * *
 
 ## Part 3: Predictive Analysis
+The exploratory data analysis shaped the hypothesis which was validated by the descriptive and diagnostic analysis portions of the study. Hence, a natural future course would consist of predicting the reservoir levels in the near future, given the rainfall values and reservoir levels up-to the present context. For this purpose, linear regression is the most suitable, as we are dealing with trends which are predictable to a certain degree, and the scatter plots above do indicate an inherent degree of correlation between the reservoir levels and rainfall.  
 
+```{r}
+reg_df = reservoir_levels
+reg_df$day_sum = reg_df$POONDI + reg_df$CHOLAVARAM + reg_df$REDHILLS + reg_df$CHEMBARAMBAKKAM
 
+library(dplyr)
+reg_df$Year = format(reg_df$Date, format = "%Y")
+Mean_Res = reg_df %>% 
+    group_by(Year) %>% 
+    summarize(Mean = mean(day_sum))
+```
+
+So, while the correlation between the yearly aggregates of reservoir levels and rainfall is not very strong, it is enough to warrant an analysis
+
+```{r}
+final_df = data.frame(cbind(Mean_Res, Aggregate_Rainfall$Agg))
+model = lm(final_df$Mean ~ final_df$Aggregate_Rainfall.Agg)
+summary(model)
+ggplot(final_df,aes(x = Aggregate_Rainfall.Agg, y = Mean)) + geom_point() + stat_smooth(method = lm) + ggtitle("Regression Line to predict Mean Reservoir Level")
+
+```
+This indicates that aggregate rainfall is actually not the most ideal predictor to determine the mean reservoir level. Although it provides a basic hint about the level, it is difficult to quantify the impact due to the relatively lower level of correlation. Hence, it becomes necessary to find more suitable variables that have a definite, quantifiable relationship with the mean reservoir level.
+```{r}
+r1 = reservoir_levels
+r1$month = format(r1$Date, format = "%m")
+r1 = r1  %>% group_by(month) %>% summarize(Ravg_Res = mean(REDHILLS))
+r1
+
+r2 = rainfall
+r2$month = format(r2$Date, format = "%m")
+r2 = r2  %>% group_by(month) %>% summarize(Ravg_Rf = sum(REDHILLS))
+r2
+
+reg_final = as.data.frame(cbind(r1$Ravg_Res, r2$Ravg_Rf))
+colnames(reg_final)= c("Ravg_Res", "Ravg_rf")
+model = lm(Ravg_Res ~ Ravg_rf, data = reg_final)
+summary(model)
+ggplot(reg_final, aes(x = Ravg_rf, y = Ravg_Res)) + geom_point() + stat_smooth(method = lm) + ggtitle("Regression Line to predict Mean Reservoir Level - Redhills")
+
+```
+```{r}
+r1 = reservoir_levels
+r1$month = format(r1$Date, format = "%m")
+r1 = r1  %>% group_by(month) %>% summarize(Cavg_Res = mean(CHEMBARAMBAKKAM))
+r1
+
+r2 = rainfall
+r2$month = format(r2$Date, format = "%m")
+r2 = r2  %>% group_by(month) %>% summarize(Cavg_Rf = sum(CHEMBARAMBAKKAM))
+r2
+
+reg_final = as.data.frame(cbind(r1$Cavg_Res, r2$Cavg_Rf))
+colnames(reg_final)= c("Cavg_Res", "Cavg_rf")
+model = lm(Cavg_Res ~ Cavg_rf, data = reg_final)
+summary(model)
+ggplot(reg_final, aes(x = Cavg_rf, y = Cavg_Res)) + geom_point() + stat_smooth(method = lm) + ggtitle("Regression Line to predict Mean Reservoir Level - Chembarambakkam")
+```
+```{r}
+r1 = reservoir_levels
+r1$month = format(r1$Date, format = "%m")
+r1 = r1  %>% group_by(month) %>% summarize(Chavg_Res = mean(CHOLAVARAM))
+r1
+
+r2 = rainfall
+r2$month = format(r2$Date, format = "%m")
+r2 = r2  %>% group_by(month) %>% summarize(Chavg_Rf = sum(CHOLAVARAM))
+r2
+
+reg_final = as.data.frame(cbind(r1$Chavg_Res, r2$Chavg_Rf))
+colnames(reg_final)= c("Chavg_Res", "Chavg_rf")
+model = lm(Chavg_Res ~ Chavg_rf, data = reg_final)
+summary(model)
+ggplot(reg_final, aes(x = Chavg_rf, y = Chavg_Res)) + geom_point() + stat_smooth(method = lm) + ggtitle("Regression Line to predict Mean Reservoir Level - Cholavaram")
+```
+```{r}
+r1 = reservoir_levels
+r1$month = format(r1$Date, format = "%m")
+r1 = r1  %>% group_by(month) %>% summarize(Pavg_Res = mean(POONDI))
+r1
+
+r2 = rainfall
+r2$month = format(r2$Date, format = "%m")
+r2 = r2  %>% group_by(month) %>% summarize(Pavg_Rf = sum(POONDI))
+r2
+
+reg_final = as.data.frame(cbind(r1$Pavg_Res, r2$Pavg_Rf))
+colnames(reg_final)= c("Pavg_Res", "Pavg_rf")
+model = lm(Pavg_Res ~ Pavg_rf, data = reg_final)
+summary(model)
+ggplot(reg_final, aes(x = Pavg_rf, y = Pavg_Res)) + geom_point() + stat_smooth(method = lm) + ggtitle("Regression Line to predict Mean Reservoir Level - Poondi")
+```
+Clearly, rainfall alone is not a suitable predictor for the mean reservoir levels, as there are other geographic factors in play that influence the water retention such as urbanization, encroachment, contamination and clogging of floodplains. The availability of such data would provide the ideal base for performing multiple regression using more sophisticated algorithms, in turn improving the accuracy of predictions. 
 
 * * *
 
