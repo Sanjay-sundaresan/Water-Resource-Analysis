@@ -11,4 +11,3 @@ The study focuses on precipitation levels in millimetres and water storage level
 
 Tools Used: RStudio
 
-!!!Work in Progress!!!
